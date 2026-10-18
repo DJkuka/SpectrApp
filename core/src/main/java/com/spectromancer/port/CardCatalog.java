@@ -15,7 +15,7 @@ public final class CardCatalog {
 
     public static Map<Integer, CardDefinition> all() {
         Map<Integer, CardDefinition> cards = new LinkedHashMap<>();
-        cards.put(1, new CardDefinition(1, "Goblin Berserker", "GoblinBerserker", "Fire", CardType.CREATURE, 1, 4, 16, -2, "Каждый ход наносит 2 урона соседним существам владельца."));
+        cards.put(1, new CardDefinition(1, "Goblin Berserker", "GoblinBerserker", "Fire", CardType.CREATURE, 1, 4, 16, -2, "В начале хода наносит 2 урона одному соседнему существу владельца: сначала проверяет слот слева, затем слот справа."));
         cards.put(2, new CardDefinition(2, "Wall Of Fire", "WallOfFire", "Fire", CardType.CREATURE, 2, 0, 5, -1, "При призыве наносит 5 урона всем существам противника."));
         cards.put(3, new CardDefinition(3, "Priest of Fire", "PriestofFire", "Fire", CardType.CREATURE, 3, 3, 13, 3, "Увеличивает прирост Огня владельца на 1, пока находится на поле."));
         cards.put(4, new CardDefinition(4, "Fire Drake", "FireDrake", "Fire", CardType.CREATURE, 4, 4, 18, 0, ""));
@@ -25,9 +25,9 @@ public final class CardCatalog {
         cards.put(8, new CardDefinition(8, "Bargul", "Bargul", "Fire", CardType.CREATURE, 8, 8, 25, 0, ""));
         cards.put(9, new CardDefinition(9, "Inferno", "Inferno", "Fire", CardType.SPELL, 9, 0, 0, 0, "Наносит 18 урона выбранному существу противника и 10 — остальным его существам."));
         cards.put(10, new CardDefinition(10, "Fire Elemental", "FireElemental", "Fire", CardType.CREATURE, 10, 0, 37, 4, "При призыве наносит 3 урона герою противника и его существам; увеличивает прирост Огня на 1."));
-        cards.put(11, new CardDefinition(11, "Armageddon", "Armageddon", "Fire", CardType.SPELL, 11, 0, 0, 0, ""));
+        cards.put(11, new CardDefinition(11, "Armageddon", "Armageddon", "Fire", CardType.SPELL, 11, 0, 0, 0, "Наносит 8 + текущая сила Огня урона всем существам и герою соперника. Сила считается до оплаты."));
         cards.put(12, new CardDefinition(12, "Dragon", "Dragon", "Fire", CardType.CREATURE, 12, 9, 40, 1, ""));
-        cards.put(13, new CardDefinition(13, "Meditation", "Meditation", "Water", CardType.SPELL, 1, 0, 0, 0, ""));
+        cards.put(13, new CardDefinition(13, "Meditation", "Meditation", "Water", CardType.SPELL, 1, 0, 0, 0, "Увеличивает силу Огня, Воздуха и Земли владельца на 1."));
         cards.put(14, new CardDefinition(14, "Sea Sprite", "SeaSprite", "Water", CardType.CREATURE, 2, 5, 22, -4, "Каждый ход наносит владельцу 2 урона."));
         cards.put(15, new CardDefinition(15, "Merfolk Apostate", "MerfolkApostate", "Water", CardType.CREATURE, 3, 3, 10, 0, ""));
         cards.put(16, new CardDefinition(16, "Ice Golem", "IceGolem", "Water", CardType.CREATURE, 4, 4, 12, 1, "Не получает урон от заклинаний и способностей существ."));
@@ -46,15 +46,15 @@ public final class CardCatalog {
         cards.put(29, new CardDefinition(29, "Wall of Lightnings", "WallOfLightnings", "Air", CardType.CREATURE, 5, 0, 28, 3, ""));
         cards.put(30, new CardDefinition(30, "Lightning bolt", "Lightningbolt", "Air", CardType.SPELL, 6, 0, 0, 0, "Наносит герою противника урон 5 + сила Воздуха владельца."));
         cards.put(31, new CardDefinition(31, "Phoenix", "Phoenix", "Air", CardType.CREATURE, 7, 6, 20, 1, ""));
-        cards.put(32, new CardDefinition(32, "Chain Lightning", "ChainLightning", "Air", CardType.SPELL, 8, 0, 0, 0, ""));
+        cards.put(32, new CardDefinition(32, "Chain Lightning", "ChainLightning", "Air", CardType.SPELL, 8, 0, 0, 0, "Наносит 9 урона каждому существу противника и его герою."));
         cards.put(33, new CardDefinition(33, "Lightning Cloud", "LightningCloud", "Air", CardType.CREATURE, 9, 4, 20, 0, ""));
-        cards.put(34, new CardDefinition(34, "Tornado", "Tornado", "Air", CardType.SPELL, 10, 0, 0, 0, ""));
+        cards.put(34, new CardDefinition(34, "Tornado", "Tornado", "Air", CardType.SPELL, 10, 0, 0, 0, "Уничтожает выбранное существо противника."));
         cards.put(35, new CardDefinition(35, "Air Elemental", "AirElemental", "Air", CardType.CREATURE, 11, 3, 44, 4, "При призыве наносит 8 урона герою противника и увеличивает прирост Воздуха на 1."));
         cards.put(36, new CardDefinition(36, "Titan", "Titan", "Air", CardType.CREATURE, 12, 9, 40, 0, ""));
         cards.put(37, new CardDefinition(37, "Elven Healer", "ElvenHealer", "Earth", CardType.CREATURE, 1, 2, 12, 1, "В начале каждого своего хода лечит владельца на 3."));
         cards.put(38, new CardDefinition(38, "Nature's Ritual", "NatureRitual", "Earth", CardType.SPELL, 2, 0, 0, 0, "Лечит владельца на 8; выбранному своему существу восстанавливает до 8 здоровья."));
         cards.put(39, new CardDefinition(39, "Forest Sprite", "ForestSprite", "Earth", CardType.CREATURE, 3, 1, 22, 0, ""));
-        cards.put(40, new CardDefinition(40, "Rejuvenation", "Rejuvenation", "Earth", CardType.SPELL, 4, 0, 0, 0, ""));
+        cards.put(40, new CardDefinition(40, "Rejuvenation", "Rejuvenation", "Earth", CardType.SPELL, 4, 0, 0, 0, "Восстанавливает герою здоровье в количестве, равном удвоенной силе Земли до оплаты."));
         cards.put(41, new CardDefinition(41, "Elf Hermit", "ElfHermit", "Earth", CardType.CREATURE, 5, 1, 13, 6, "Увеличивает прирост Земли владельца на 2, пока находится на поле."));
         cards.put(42, new CardDefinition(42, "Natural Fury", "NaturalFury", "Earth", CardType.SPELL, 6, 0, 0, 0, "Наносит противнику урон, равный сумме атаки двух сильнейших существ владельца."));
         cards.put(43, new CardDefinition(43, "Giant Spider", "GiantSpider", "Earth", CardType.CREATURE, 7, 4, 21, 0, ""));
@@ -69,7 +69,7 @@ public final class CardCatalog {
         cards.put(52, new CardDefinition(52, "Emissary of Dorlak", "EmissaryofDorlak", "Death", CardType.CREATURE, 4, 7, 48, 0, ""));
         cards.put(53, new CardDefinition(53, "Blood Ritual", "BloodRitual", "Death", CardType.SPELL, 5, 0, 0, 0, ""));
         cards.put(54, new CardDefinition(54, "Keeper of Death", "KeeperofDeath", "Death", CardType.CREATURE, 6, 7, 35, 3, "Когда погибает существо противника, увеличивает особую силу владельца на 1."));
-        cards.put(55, new CardDefinition(55, "Drain Souls", "DrainSouls", "Death", CardType.SPELL, 7, 0, 0, 0, ""));
+        cards.put(55, new CardDefinition(55, "Drain Souls", "DrainSouls", "Death", CardType.SPELL, 7, 0, 0, 0, "Уничтожает существ, не защищённых специальной невосприимчивостью к заклинаниям, и лечит владельца на 2 за каждое уничтоженное существо."));
         cards.put(56, new CardDefinition(56, "Master Lich", "MasterLich", "Death", CardType.CREATURE, 8, 8, 46, 3, ""));
         cards.put(57, new CardDefinition(57, "Paladin", "Paladin", "Holy", CardType.CREATURE, 1, 4, 9, 0, ""));
         cards.put(58, new CardDefinition(58, "Monk", "Monk", "Holy", CardType.CREATURE, 2, 4, 13, 0, ""));

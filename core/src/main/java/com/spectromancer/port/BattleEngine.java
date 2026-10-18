@@ -20,6 +20,7 @@ public final class BattleEngine {
     private static final int MAX_AI_PLAYS_PER_TURN = 20;
 
     private final Map<Integer, CardDefinition> catalog;
+    private final List<Integer> configuredDeckIds;
     private final List<String> log = new ArrayList<>();
     private final Random aiRandom;
     private final PlayerState[] players = new PlayerState[2];
@@ -35,9 +36,15 @@ public final class BattleEngine {
     }
 
     public BattleEngine(Map<Integer, CardDefinition> catalog, long seed) {
+        this(catalog, seed, CardCatalog.starterIds());
+    }
+
+    /** Explicit deck list supports incremental rule tests and future deck-selection UI. */
+    public BattleEngine(Map<Integer, CardDefinition> catalog, long seed, List<Integer> deckIds) {
         this.catalog = catalog;
+        this.configuredDeckIds = new ArrayList<>(deckIds);
         List<CardDefinition> starter = new ArrayList<>();
-        for (int id : CardCatalog.starterIds()) {
+        for (int id : configuredDeckIds) {
             CardDefinition card = catalog.get(id);
             if (card != null) starter.add(card);
         }
@@ -60,6 +67,58 @@ public final class BattleEngine {
     public List<String> logLines() { return Collections.unmodifiableList(new ArrayList<>(log)); }
     public CardDefinition cardForHuman(int id) { return human().findCard(id); }
 
+    /** Context-sensitive explanation shown in the long-press card panel. */
+    public String currentEffectHint(CardDefinition card, int ownerSide) {
+        if (card == null) return "Нет данных об этой карте.";
+        PlayerState owner = players[ownerSide == AI ? AI : HUMAN];
+        PlayerState enemy = opponentOf(owner);
+        switch (card.id) {
+            case 1: return "В начале вашего хода: 2 урона своим существам слева и справа от гоблина.";
+            case 2: return "При призыве: 5 урона каждому существу соперника.";
+            case 6: return "Сейчас: до " + (9 + owner.spellDamageBonus) + " урона каждому существу соперника.";
+            case 9: return "Сейчас: до " + (18 + owner.spellDamageBonus) + " урона выбранной цели и " + (10 + owner.spellDamageBonus) + " остальным существам соперника.";
+            case 10: return "При призыве: 3 урона герою и существам соперника; прирост Огня +1. Атака после оплаты: " + Math.max(0, owner.getPower(Element.FIRE) - card.cost) + ".";
+            case 11: return "Сейчас: " + (8 + owner.getPower(Element.FIRE) + owner.spellDamageBonus) + " урона каждому существу на поле и герою соперника. Сила Огня считается до оплаты.";
+            case 13: return "При применении увеличивает текущую силу Огня, Воздуха и Земли на 1.";
+            case 14: return "В начале каждого вашего хода наносит 2 урона вашему герою.";
+            case 16: return "Получает 0 урона от заклинаний и способностей существ; обычные атаки по линии наносят урон.";
+            case 20: return "Сейчас: до " + (15 + owner.spellDamageBonus) + " урона каждому существу на обеих сторонах; все силы соперника уменьшаются на 1.";
+            case 22: return "При призыве лечит героя на 10 и увеличивает прирост Воды на 1. Атака после оплаты: " + Math.max(0, owner.getPower(Element.WATER) - card.cost) + ".";
+            case 25: return "Пока существо на поле, урон заклинаний владельца увеличен на 1.";
+            case 27: return "Сейчас: до " + (6 + owner.spellDamageBonus) + " урона выбранному существу и " + (6 + owner.spellDamageBonus) + " герою соперника.";
+            case 30: return "Сейчас: " + (5 + owner.getPower(Element.AIR) + owner.spellDamageBonus) + " урона герою соперника. Сила Воздуха считается до оплаты.";
+            case 35: return "При призыве наносит 8 урона герою соперника и увеличивает прирост Воздуха на 1. Атака после оплаты: " + Math.max(0, owner.getPower(Element.AIR) - card.cost) + ".";
+            case 37: return "В начале каждого вашего хода восстанавливает герою 3 здоровья.";
+            case 38: return "Лечит героя на 8 и восстанавливает выбранному вашему существу до 8 здоровья.";
+            case 40: return "Сейчас восстанавливает герою " + (2 * owner.getPower(Element.EARTH)) + " здоровья. Сила Земли считается до оплаты.";
+            case 42: return "Сейчас нанесёт герою соперника " + (topTwoAttacks(owner) + owner.spellDamageBonus) + " урона — сумма атаки двух сильнейших ваших существ.";
+            case 45: return "Сейчас: до " + (25 + owner.spellDamageBonus) + " урона каждому существу на обеих сторонах поля.";
+            case 49: return "Сейчас: до " + (3 + owner.spellDamageBonus) + " урона каждому существу соперника; ваши существа лечатся на 3.";
+            case 50: return "Сейчас: до " + (12 + owner.spellDamageBonus) + " урона каждому существу на поле и " + (3 + owner.spellDamageBonus) + " герою соперника.";
+            case 51: return "При призыве наносит существу в противоположном слоте урон в половину его текущего здоровья (с округлением вверх).";
+            case 53: return "Жертвует выбранным вашим существом и наносит всем существам соперника урон по его текущему здоровью, но не более 32.";
+            case 54: return "Каждый раз, когда погибает существо соперника, особая сила владельца увеличивается на 1.";
+            case 32: return "Сейчас: до " + (9 + owner.spellDamageBonus) + " урона каждому существу соперника и его герою.";
+            case 34: return "Уничтожает выбранное существо соперника, а не наносит обычный числовой урон.";
+            case 55: return "Уничтожает подходящие цели среди существ на обеих сторонах и лечит героя на 2 за каждое уничтоженное существо.";
+            default:
+                return card.description == null || card.description.trim().isEmpty()
+                        ? "Точное описание эффекта ещё не перенесено из оригинального кода."
+                        : card.description.trim();
+        }
+    }
+
+    private int topTwoAttacks(PlayerState player) {
+        int first = 0, second = 0;
+        for (CreatureState c : player.board) {
+            if (c == null) continue;
+            int a = Math.max(0, c.attack);
+            if (a >= first) { second = first; first = a; }
+            else if (a > second) second = a;
+        }
+        return first + second;
+    }
+
     public boolean isTargetSpell(CardDefinition card) {
         return card != null && card.isSpell() && card.requiresTarget();
     }
@@ -72,7 +131,8 @@ public final class BattleEngine {
     public boolean isCardEnabledForHuman(CardDefinition card) {
         return !gameOver && activePlayer == HUMAN && card != null
                 && human().isAvailable(card) && human().canAfford(card)
-                && (!card.isCreature() || human().freeSlot() >= 0 || canUseSpecialSummon(card, human()));
+                && (!card.isCreature() || (card.id == 52
+                    ? canUseSpecialSummon(card, human()) : human().freeSlot() >= 0));
     }
 
     public void tapCard(int cardId) {
@@ -113,6 +173,15 @@ public final class BattleEngine {
         if (card.isCreature()) {
             if (side != HUMAN) {
                 status = "Существа можно призывать только на свою сторону поля.";
+                return;
+            }
+            if (card.id == 52) {
+                if (human().board[slot] == null) {
+                    status = "Эмиссар Дорлака заменяет существо. Коснитесь занятого слота на своей стороне.";
+                    return;
+                }
+                summon(human(), opponent(), card, slot);
+                selectedCardId = null;
                 return;
             }
             if (human().board[slot] != null) {
@@ -165,7 +234,7 @@ public final class BattleEngine {
 
     public void restart() {
         long seed = System.nanoTime();
-        BattleEngine fresh = new BattleEngine(catalog, seed);
+        BattleEngine fresh = new BattleEngine(catalog, seed, configuredDeckIds);
         for (int i = 0; i < players.length; i++) players[i] = fresh.players[i];
         log.clear();
         log.addAll(fresh.log);
@@ -178,8 +247,8 @@ public final class BattleEngine {
     }
 
     private boolean canUseSpecialSummon(CardDefinition card, PlayerState owner) {
-        // The original permits only certain card-specific summons over an occupied board.
-        return card.id == 52 && owner.getPower(Element.SPECIAL) >= card.cost;
+        // Emissary of Dorlak replaces an existing friendly creature, so a free slot is not required.
+        return card != null && card.id == 52 && owner.hasAnyCreatures();
     }
 
     private void beginTurn(PlayerState player, boolean grow) {
@@ -188,14 +257,18 @@ public final class BattleEngine {
             player.growPowers();
             addLog(player.name + " получает прирост силы.");
         }
+        refreshDynamicAttacks(player);
         for (int i = 0; i < player.board.length; i++) {
             CreatureState creature = player.board[i];
             if (creature == null) continue;
             creature.canAttack = true;
             switch (creature.card.id) {
-                case 1: // Goblin Berserker deals damage to neighbouring friendly creatures.
-                    damageCreature(player, i - 1, 2, false, false);
-                    damageCreature(player, i + 1, 2, false, false);
+                case 1: // Original prioritizes the left neighbour, otherwise the right; never hits both.
+                    if (i > 0 && player.board[i - 1] != null) {
+                        damageCreature(player, i - 1, 2, false, true, true);
+                    } else if (i + 1 < player.board.length && player.board[i + 1] != null) {
+                        damageCreature(player, i + 1, 2, false, true, true);
+                    }
                     break;
                 case 14: player.health -= 2; addLog("Sea Sprite наносит 2 урона своему владельцу."); break;
                 case 29: opponentOf(player).health -= 4; addLog("Wall of Lightnings наносит 4 урона противнику."); break;
@@ -207,7 +280,6 @@ public final class BattleEngine {
                     break;
                 default: break;
             }
-            if (creature.card.id == 8 && creature.attack < creature.card.attack + 10) creature.attack += 1;
         }
         cleanBoards();
         checkGameOver();
@@ -237,7 +309,10 @@ public final class BattleEngine {
             if (card.isCreature()) {
                 int slot = chooseSummonSlot(owner, enemy, card);
                 if (slot < 0) continue;
-                double score = 4.0 + card.attack * 0.95 + card.health * 0.16 - card.cost * 0.28;
+                int projectedAttack = isElemental(card.id)
+                        ? Math.max(0, owner.getPower(card.resource()) - card.cost)
+                        : card.attack;
+                double score = 4.0 + projectedAttack * 0.95 + card.health * 0.16 - card.cost * 0.28;
                 if (card.id == 2) score += enemy.countCreatures() * 1.8;
                 if (card.id == 10 || card.id == 22 || card.id == 35) score += 3.5;
                 if (score > bestScore) { bestScore = score; best = new AiChoice(card, slot, -1); }
@@ -264,7 +339,12 @@ public final class BattleEngine {
             CreatureState blocking = enemy.board[i];
             double s = aiRandom.nextDouble();
             if (blocking == null) s += 2.0;
-            else s += Math.min(10, card.attack) - Math.min(10, blocking.health) * 0.12;
+            else {
+                int projectedAttack = isElemental(card.id)
+                        ? Math.max(0, owner.getPower(card.resource()) - card.cost)
+                        : card.attack;
+                s += Math.min(10, projectedAttack) - Math.min(10, blocking.health) * 0.12;
+            }
             if (card.attack == 0 && blocking != null) s -= 1.0;
             if (s > score) { score = s; slot = i; }
         }
@@ -317,7 +397,7 @@ public final class BattleEngine {
         }
         switch (card.id) {
             case 6: case 45: case 49: return enemy.countCreatures() > 0;
-            case 20: return owner.countCreatures() + enemy.countCreatures() > 0;
+            case 20: return owner.countCreatures() + enemy.countCreatures() > 0 || hasAnyPower(enemy);
             case 42: return owner.countCreatures() > 0;
             case 50: return enemy.health > 0;
             default: return true;
@@ -329,19 +409,22 @@ public final class BattleEngine {
         if (card.id != 52 && owner.board[slot] != null) return;
         if (card.id == 52 && owner.board[slot] == null) return;
         owner.spend(card);
+        refreshDynamicAttacks(owner);
         if (card.id == 52) killCreature(owner, slot, false);
         CreatureState creature = new CreatureState(card);
+        if (isElemental(card.id)) creature.attack = owner.getPower(card.resource());
         owner.board[slot] = creature;
         applyCreatureAura(owner, creature, 1);
+        refreshDynamicAttacks(owner);
         addLog(owner.name + " призывает " + card.name + " в слот " + (slot + 1) + ".");
         switch (card.id) {
             case 2:
-                damageAllCreatures(enemy, 5, false);
+                damageAllCreatures(enemy, 5, false, true);
                 break;
             case 3: modifyGrowth(owner, creature, Element.FIRE, 1); break;
             case 10:
                 enemy.health -= 3;
-                damageAllCreatures(enemy, 3, false);
+                damageAllCreatures(enemy, 3, false, true);
                 modifyGrowth(owner, creature, Element.FIRE, 1);
                 break;
             case 17: modifyGrowth(owner, creature, Element.AIR, 1); break;
@@ -362,7 +445,7 @@ public final class BattleEngine {
             case 51:
                 if (enemy.board[slot] != null) {
                     int damage = (enemy.board[slot].health + 1) / 2;
-                    damageCreature(enemy, slot, damage, false, true);
+                    damageCreature(enemy, slot, damage, false, true, true);
                 }
                 break;
             case 54: break; // Death power trigger is handled when enemy creatures die.
@@ -374,7 +457,13 @@ public final class BattleEngine {
     private void castSpell(PlayerState owner, PlayerState enemy, CardDefinition card, int targetSlot, int ownerSide) {
         if (owner == null || card == null || !card.isSpell() || !owner.isAvailable(card) || !owner.canAfford(card)) return;
         if (card.requiresTarget() && (targetSlot < 0 || targetSlot >= 6)) return;
+        // The original Flash rules resolve spellAttack() before charging its resource cost.
+        // Capture power here so scaling effects are based on the same pre-payment values.
+        int firePowerBeforeCast = owner.getPower(Element.FIRE);
+        int airPowerBeforeCast = owner.getPower(Element.AIR);
+        int earthPowerBeforeCast = owner.getPower(Element.EARTH);
         owner.spend(card);
+        refreshDynamicAttacks(owner);
         int spellDamage = owner.spellDamageBonus;
         addLog(owner.name + " применяет " + card.name + ".");
         switch (card.id) {
@@ -389,17 +478,18 @@ public final class BattleEngine {
                 damageAllCreatures(owner, 15 + spellDamage, true);
                 damageAllCreatures(enemy, 15 + spellDamage, true);
                 reduceAllPower(enemy, 1);
+                refreshDynamicAttacks(enemy);
                 break;
             case 27:
                 damageCreature(enemy, targetSlot, 6 + spellDamage, true, true);
                 enemy.health -= 6 + spellDamage;
                 break;
-            case 30: enemy.health -= 5 + owner.getPower(Element.AIR) + spellDamage; break;
+            case 30: enemy.health -= 5 + airPowerBeforeCast + spellDamage; break;
             case 38:
                 healPlayer(owner, 8);
                 healCreature(owner, targetSlot, 8);
                 break;
-            case 40: healPlayer(owner, owner.getPower(Element.EARTH) * 2); break;
+            case 40: healPlayer(owner, earthPowerBeforeCast * 2); break;
             case 42:
                 List<Integer> attacks = new ArrayList<>();
                 for (CreatureState c : owner.board) if (c != null) attacks.add(c.attack);
@@ -433,17 +523,73 @@ public final class BattleEngine {
                 if (enemy.board[targetSlot] != null) killCreature(enemy, targetSlot, true);
                 break;
             case 11:
-                int damage = 8 + owner.getPower(Element.FIRE) + spellDamage;
+                int damage = 8 + firePowerBeforeCast + spellDamage;
                 enemy.health -= damage;
                 damageAllCreatures(owner, damage, true);
                 damageAllCreatures(enemy, damage, true);
+                break;
+            case 13: // Meditation: the original increases Fire, Air and Earth, not every resource.
+                owner.addPower(Element.FIRE, 1);
+                owner.addPower(Element.AIR, 1);
+                owner.addPower(Element.EARTH, 1);
+                addLog(owner.name + " увеличивает силу Огня, Воздуха и Земли на 1.");
+                break;
+            case 32: // Chain Lightning: base version hits enemy creatures and the hero for 9.
+                int chainDamage = 9 + spellDamage;
+                damageAllCreatures(enemy, chainDamage, true);
+                enemy.health -= chainDamage;
+                break;
+            case 55: // Drain Souls: destroy creatures that the original spell can target; heal 2 per kill.
+                int destroyed = 0;
+                for (int i = 0; i < enemy.board.length; i++) {
+                    CreatureState c = enemy.board[i];
+                    if (c != null && !isInstantKillSpellImmune(c.card.id)) {
+                        killCreature(enemy, i, true);
+                        destroyed++;
+                    }
+                }
+                for (int i = 0; i < owner.board.length; i++) {
+                    CreatureState c = owner.board[i];
+                    if (c != null && !isInstantKillSpellImmune(c.card.id)) {
+                        killCreature(owner, i, true);
+                        destroyed++;
+                    }
+                }
+                healPlayer(owner, destroyed * 2);
+                addLog("Drain Souls уничтожает существ: " + destroyed + ", лечение: " + (destroyed * 2) + ".");
                 break;
             default:
                 addLog("Эффект карты " + card.name + " ещё не перенесён.");
                 break;
         }
+        if ("blood".equalsIgnoreCase(card.category)) {
+            owner.health -= card.cost * 2;
+            addLog(owner.name + " теряет " + (card.cost * 2) + " здоровья за заклинание Крови.");
+        }
+        refreshDynamicAttacks(owner);
+        refreshDynamicAttacks(enemy);
         cleanBoards();
         checkGameOver();
+    }
+
+    private boolean isElemental(int cardId) {
+        return cardId == 10 || cardId == 22 || cardId == 35 || cardId == 46;
+    }
+
+    /** ImmuneToSpell() list used by the original Drain Souls implementation. */
+    private boolean isInstantKillSpellImmune(int cardId) {
+        return cardId == 138 || cardId == 140 || cardId == 178
+                || cardId == 181 || cardId == 184 || cardId == 187;
+    }
+
+    /** The four classic elementals use their owner's current matching power as attack. */
+    private void refreshDynamicAttacks(PlayerState player) {
+        if (player == null) return;
+        for (CreatureState creature : player.board) {
+            if (creature != null && isElemental(creature.card.id)) {
+                creature.attack = player.getPower(creature.card.resource());
+            }
+        }
     }
 
     private void applyCreatureAura(PlayerState owner, CreatureState creature, int sign) {
@@ -466,7 +612,7 @@ public final class BattleEngine {
             creature.canAttack = false;
             if (creature.card.id == 39) {
                 enemy.health -= creature.attack;
-                damageAllCreatures(enemy, creature.attack, false);
+                damageAllCreatures(enemy, creature.attack, false, true);
                 addLog(creature.name() + " атакует всех существ соперника и самого соперника.");
                 continue;
             }
@@ -485,14 +631,27 @@ public final class BattleEngine {
     }
 
     private void damageAllCreatures(PlayerState player, int amount, boolean spellDamage) {
-        for (int i = 0; i < player.board.length; i++) damageCreature(player, i, amount, spellDamage, true);
+        damageAllCreatures(player, amount, spellDamage, false);
+    }
+
+    private void damageAllCreatures(PlayerState player, int amount, boolean spellDamage, boolean abilityDamage) {
+        for (int i = 0; i < player.board.length; i++) {
+            damageCreature(player, i, amount, spellDamage, abilityDamage, true);
+        }
         cleanBoards();
     }
 
     private void damageCreature(PlayerState player, int slot, int amount, boolean spellDamage, boolean invokeDeathEffects) {
+        damageCreature(player, slot, amount, spellDamage, false, invokeDeathEffects);
+    }
+
+    private void damageCreature(PlayerState player, int slot, int amount, boolean spellDamage,
+                                boolean abilityDamage, boolean invokeDeathEffects) {
         if (slot < 0 || slot >= player.board.length || player.board[slot] == null || amount <= 0) return;
         CreatureState creature = player.board[slot];
-        if (spellDamage && (creature.card.id == 16 || creature.card.id == 221)) return;
+        // In the original, Ice Golem and Steel Golem resist both spell damage and creature abilities,
+        // but still take ordinary lane-attack damage.
+        if ((spellDamage || abilityDamage) && (creature.card.id == 16 || creature.card.id == 221)) return;
         if (creature.card.id == 19) amount = Math.max(0, amount - 5);
         creature.health -= amount;
         if (creature.health <= 0 && invokeDeathEffects) killCreature(player, slot, true);
@@ -522,8 +681,14 @@ public final class BattleEngine {
         }
     }
 
+    private boolean hasAnyPower(PlayerState player) {
+        for (Element element : Element.values()) if (player.getPower(element) > 0) return true;
+        return false;
+    }
+
     private void reduceAllPower(PlayerState player, int amount) {
         for (Element element : Element.values()) player.addPower(element, -amount);
+        refreshDynamicAttacks(player);
     }
 
     private void healPlayer(PlayerState player, int amount) {

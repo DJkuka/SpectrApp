@@ -79,3 +79,25 @@ SpectromancerNative/
 The `assets/gfx/` folder contains the 223 original card illustration crops from the submitted SWF atlas, cleaned transparent card-frame templates, mage portraits, a title-screen image, an adapted battlefield background, and paper/button textures. The Java screen loads these resources and renders the art on cards and creatures. The full original Flash animation/timeline system is not yet ported.
 
 A GitHub Actions workflow lives at `.github/workflows/android.yml`. Push to `main`/`master` or manually run **Actions → Build native Android APK**; the resulting APK is uploaded as `Spectromancer-Native-debug`.
+
+
+## Interaction + mechanics pass (2026-10-18)
+
+- The hand now shows seven cards at near-battlefield size (128×140 logical units) per page; previous/next buttons and horizontal swipe across empty hand space navigate the full 20-card deck without shrinking the art.
+- Long-press (about 0.5 seconds) on a hand card or an occupied battlefield creature opens a parchment panel. It shows the art, name, localized category/type, cost, current or projected stats, original imported rule text, and a live effect preview calculated from the current powers/board where supported. The help panel remains open after release; tap anywhere to close it. A long press never casts the selected spell by accident.
+- The four classic Elementals use their owner's current matching elemental power as attack; the value refreshes when power is spent, grows or is reduced.
+- Ice Golem / Steel Golem resist spell and creature-ability damage but still take ordinary lane-attack damage. This includes Wall of Fire, Fire Elemental, Goblin Berserker and Banshee ability damage.
+- Additional baseline effects are implemented for Armageddon, Meditation, Chain Lightning, Tornado, Rejuvenation and Drain Souls. Lightning Bolt, Armageddon and Rejuvenation use pre-payment power, matching the order in the original `GamePlay.castSpell()` / `SpellCard.spellAttack()` flow. Blood-school spell health costs are also applied.
+- Core smoke tests now cover those spell mechanics, live Lightning Bolt preview, Ice Golem immunity and dynamic Elemental attack.
+
+The Android UI code and assets are included in this source revision. This environment still lacks Android SDK/Gradle and cannot run a device-level APK build; use GitHub Actions to build the APK after pushing this revision.
+
+
+## Revision 0.2.0 — touch UX and rules pass
+
+- Replaced the undersized multi-row hand with a 7-card paged row at the same logical card dimensions used on the battlefield. Tap the page arrows or swipe horizontally through gaps in the hand row.
+- Long-press for about half a second on a hand card or occupied creature to open a detail panel. The panel shows original art, localized category/type, cost, creature stats, imported rule text, and a live calculation for supported effects. Tap to dismiss.
+- Added contextual previews for damage and healing amounts, power changes, summoning effects, and death triggers for the starter set and selected other cards.
+- Continued rules port: Armageddon, Meditation, Chain Lightning, Tornado, Rejuvenation, Drain Souls, and Blood-school spell health cost; scaling for Lightning Bolt, Armageddon, and Rejuvenation now uses pre-payment power, matching original call order.
+- Corrected Goblin Berserker to damage at most one neighbour per owner turn (left takes priority), and fixed Emissary of Dorlak so it can replace an existing friendly creature even when all six lanes are occupied. Removed an attack-growth effect that belongs only to upgraded Bargul.
+- Regression smoke tests cover these changes. Android UI compilation/device behavior still must be confirmed by the GitHub Actions APK build and a device install.
