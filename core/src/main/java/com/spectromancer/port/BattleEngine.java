@@ -232,6 +232,17 @@ public final class BattleEngine {
         if (!gameOver) status = "Ваш ход " + humanTurn + ". Выберите доступную карту.";
     }
 
+    /** Surrender action from the native sidebar. */
+    public void surrender() {
+        if (gameOver) return;
+        gameOver = true;
+        winner = AI;
+        selectedCardId = null;
+        activePlayer = AI;
+        status = "Вы сдались. Победил соперник.";
+        addLog("Вы сдались. Бой завершён.");
+    }
+
     public void restart() {
         long seed = System.nanoTime();
         BattleEngine fresh = new BattleEngine(catalog, seed, configuredDeckIds);

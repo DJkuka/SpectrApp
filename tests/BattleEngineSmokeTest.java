@@ -20,8 +20,17 @@ public final class BattleEngineSmokeTest {
         testGoblinBerserkerTurnEffect(all);
         testEmissaryReplacement(all);
         testDirectDamageAndVictory(all);
+        testSurrender(all);
 
-        System.out.println("PASS: catalog=" + all.size() + ", summon, resource cost, target spell, Ice Golem immunity, dynamic elemental attack, live spell previews, expanded spells, Goblin Berserker priority, Emissary replacement, blood spell cost, direct damage, victory and turn progression verified");
+        System.out.println("PASS: catalog=" + all.size() + ", summon, resource cost, target spell, Ice Golem immunity, dynamic elemental attack, live spell previews, expanded spells, Goblin Berserker priority, Emissary replacement, blood spell cost, surrender, direct damage, victory and turn progression verified");
+    }
+
+    private static void testSurrender(Map<Integer, CardDefinition> all) {
+        BattleEngine engine = new BattleEngine(all, 909L);
+        engine.surrender();
+        check(engine.isGameOver(), "surrender ends the match");
+        check(engine.winner() == BattleEngine.AI, "opponent wins after surrender");
+        check(engine.status().contains("сдались"), "surrender status is visible");
     }
 
     private static void testSummoningAndTurns(Map<Integer, CardDefinition> all) {

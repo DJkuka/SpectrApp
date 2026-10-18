@@ -53,7 +53,7 @@ This environment does not include Android SDK or Gradle and has no package-repos
 ## Compatibility target
 
 - `minSdk 23`; Android 11 and Android 12 are both within the supported range.
-- Landscape orientation; designed for a 1280×720 logical viewport and scales to different screens.
+- Landscape orientation; the battle screen now uses a 1024×768 (4:3) logical viewport to match the supplied original interface. `FitViewport` preserves layout proportions; wider devices may show side bars.
 - No `INTERNET` permission or advertised/portal SDK in this Android module.
 
 ## Project structure
@@ -101,3 +101,14 @@ The Android UI code and assets are included in this source revision. This enviro
 - Continued rules port: Armageddon, Meditation, Chain Lightning, Tornado, Rejuvenation, Drain Souls, and Blood-school spell health cost; scaling for Lightning Bolt, Armageddon, and Rejuvenation now uses pre-payment power, matching original call order.
 - Corrected Goblin Berserker to damage at most one neighbour per owner turn (left takes priority), and fixed Emissary of Dorlak so it can replace an existing friendly creature even when all six lanes are occupied. Removed an attack-growth effect that belongs only to upgraded Bargul.
 - Regression smoke tests cover these changes. Android UI compilation/device behavior still must be confirmed by the GitHub Actions APK build and a device install.
+
+
+## Revision 0.3.0 — original interface layout
+
+- Reworked `BattleScreen` to a 1024×768 logical layout based on the supplied original screenshot. The Android activity remains landscape.
+- Replaced the seven-card paging row with the original 5×4 hand grid so all 20 starter cards are visible at once. Cards use the original small frames and extracted artwork; card cost and creature stats remain dynamic.
+- Rebuilt the six-lane/two-row board, left command rail, original mage portrait/sigil column, two life bars and ten resource tabs. The command rail supports View Help, Options, Main Menu and a surrender confirmation; the circular control in the sigil ends the turn.
+- Restored a lower-left selected-card panel and combat log, using border details cropped from the user-provided interface screenshot. Long-press inspection and live effect hints remain in place.
+- Added a small overlay help/options UI and native surrender handling.
+- Bumped Android `versionCode` to 3 and `versionName` to `0.3.0-original-ui`.
+- Core regression tests pass. A full Gradle/Android build and device test still need to be run through GitHub Actions or Android Studio; this environment does not have the Android SDK/Gradle installation needed to produce a new APK directly.

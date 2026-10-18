@@ -16,8 +16,8 @@ import com.badlogic.gdx.utils.viewport.FitViewport;
 
 /** Native title screen using artwork extracted from the supplied SWF. */
 public final class TitleScreen extends ScreenAdapter {
-    private static final float W = 1280f, H = 720f;
-    private static final float BUTTON_X = 455f, BUTTON_Y = 130f, BUTTON_W = 370f, BUTTON_H = 62f;
+    private static final float W = 1024f, H = 768f;
+    private static final float BUTTON_X = 327f, BUTTON_Y = 151f, BUTTON_W = 370f, BUTTON_H = 62f;
 
     private final SpectromancerGame game;
     private final OrthographicCamera camera = new OrthographicCamera();
@@ -79,9 +79,9 @@ public final class TitleScreen extends ScreenAdapter {
         titleFont.setColor(Color.valueOf("fff0c8"));
         titleFont.draw(batch, "НАЧАТЬ БОЙ", BUTTON_X, BUTTON_Y + 39, BUTTON_W, Align.center, false);
         bodyFont.setColor(Color.valueOf("e8dfca"));
-        bodyFont.draw(batch, "ЛОКАЛЬНАЯ ДУЭЛЬ · БЕЗ СЕТИ И РЕКЛАМЫ", 300, 95, 680, Align.center, false);
+        bodyFont.draw(batch, "ЛОКАЛЬНАЯ ДУЭЛЬ · БЕЗ СЕТИ И РЕКЛАМЫ", 150, 110, 724, Align.center, false);
         bodyFont.setColor(Color.valueOf("d2c2a3"));
-        bodyFont.draw(batch, "Нативный порт для Android · первый этап переноса", 280, 65, 720, Align.center, false);
+        bodyFont.draw(batch, "Нативный порт для Android · первый этап переноса", 150, 77, 724, Align.center, false);
         batch.end();
 
         shapes.begin(ShapeRenderer.ShapeType.Line);
